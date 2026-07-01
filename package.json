@@ -2,12 +2,22 @@
   "name": "projectblog",
   "version": "1.0.0",
   "description": "assignment build a curd applciation",
+  "keywords": [],
+  "homepage": "https://github.com/Usama-dev1/express-server-boilerplate#readme",
+  "bugs": {
+    "url": "https://github.com/Usama-dev1/express-server-boilerplate/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Usama-dev1/express-server-boilerplate.git"
+  },
   "license": "ISC",
   "author": "usama altaf",
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",
