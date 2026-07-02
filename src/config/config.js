@@ -4,7 +4,9 @@ if (!process.env.NODE_ENV) {
   throw new Error("Node env not defined in environment variables");
 }
 
-if (!process.env.PORT) {
+const requirePort = process.env.NODE_ENV !== "production";
+
+if (requirePort && !process.env.PORT) {
   throw new Error("Port not defined in environment variables");
 }
 if (!process.env.MONGO_URI) {
@@ -20,7 +22,7 @@ if (!process.env.REFRESH_TOKEN_SECRET) {
 const config = {
   NODE_ENV: process.env.NODE_ENV,
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:5173",
-  PORT: process.env.PORT,
+  PORT: process.env.PORT || 3000,
   MONGO_URI: process.env.MONGO_URI,
   ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
