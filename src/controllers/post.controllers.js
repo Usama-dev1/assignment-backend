@@ -302,8 +302,7 @@ export const deletePost = async (req, res) => {
 
     //only post owner and admin/super admin can soft delete
     const isOwner = post.userId.toString() === userId;
-    const canDeleteThisPost =
-      req.user.role === "admin" || req.user.role === "super_admin";
+    const canDeleteThisPost = req.user.role === "super_admin";
     if (!isOwner && !canDeleteThisPost) {
       return res.status(403).json({
         success: false,
@@ -357,8 +356,7 @@ export const hardDeletePost = async (req, res) => {
     }
 
     //only admin/super admin can hard delete
-    const canDeleteThisPost =
-      req.user.role === "admin" || req.user.role === "super_admin";
+    const canDeleteThisPost = req.user.role === "super_admin";
     if (!canDeleteThisPost) {
       return res.status(403).json({
         success: false,

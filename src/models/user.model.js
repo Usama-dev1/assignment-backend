@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin", "super_admin"],
       default: "user",
     },
+    refreshTokenHash: {
+      type: String,
+      default: null,
+    },
     isDeleted: {
       type: Boolean,
       default: false,
