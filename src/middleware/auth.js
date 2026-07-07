@@ -19,7 +19,12 @@ export const authenticate = (req, res, next) => {
     };
     next();
   } catch (error) {
-    console.error("[authenticate] Error:", error);
+    if (
+      error.name !== "TokenExpiredError" &&
+      error.name !== "JsonWebTokenError"
+    ) {
+      console.error("[authenticate] Error:", error);
+    }
     return res.status(401).json({
       success: false,
       message: "Invalid or expired access token",

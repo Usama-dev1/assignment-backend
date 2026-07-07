@@ -32,23 +32,45 @@ export const register = async (req, res) => {
       });
     }
 
+    const refreshTokenId = crypto.randomBytes(32).toString("hex");
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({
+    const user = await User.create({
       username: username.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
     });
+    const payload = {
+      id: user._id,
+      role: user.role,
+    };
+    const accessToken = createAccessToken(payload);
+    const refreshToken = createRefreshToken({
+      id: user._id,
+      tokenId: refreshTokenId,
+    });
+    user.refreshTokenHash = hashTokenId(refreshTokenId);
     await user.save();
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: config.NODE_ENV === "production",
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
 
     return res.status(201).json({
       success: true,
       data: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
+        accessToken,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
       },
-      message: "User registered successfully",
+      message: "User Registered Successfully",
     });
   } catch (error) {
     console.error("[register] Error:", error);
@@ -111,7 +133,14 @@ export const login = async (req, res) => {
       success: true,
       data: {
         accessToken,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
       },
+      message: "User Logged In successfully",
     });
   } catch (error) {
     console.error("[login] Error:", error);
@@ -232,20 +261,34 @@ export const refreshToken = async (req, res) => {
 
 export const getProfile = async (req, res) => {
   try {
-    const user = req.user;
-    if (!user) {
+    const checkUser = req.user;
+    if (!checkUser) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
       });
     }
-
+    const user = await User.findOne({
+      _id: checkUser.id,
+      isDeleted: false,
+    }).select("_id username email role");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "user not found",
+      });
+    }
     return res.status(200).json({
       success: true,
       data: {
-        id: user.id,
-        role: user.role,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
       },
+      message: "Profile Found",
     });
   } catch (error) {
     console.error("[getProfile] Error:", error);
