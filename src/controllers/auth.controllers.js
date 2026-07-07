@@ -162,6 +162,16 @@ export const logout = async (req, res) => {
 };
 
 export const refreshToken = async (req, res) => {
+  //clear dead refresh token cookie
+  const clearRefreshCookie = () => {
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: config.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+    });
+  };
+
   try {
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
@@ -170,36 +180,33 @@ export const refreshToken = async (req, res) => {
         message: "Refresh token is required",
       });
     }
-
     const payload = jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET);
     const user = await User.findById(payload.id).select(
       "role isDeleted refreshTokenHash",
     );
     if (!user || user.isDeleted || !payload.tokenId) {
+      clearRefreshCookie();
       return res.status(401).json({
         success: false,
         message: "User not found",
       });
     }
-
     const tokenHash = hashTokenId(payload.tokenId);
     if (!user.refreshTokenHash || user.refreshTokenHash !== tokenHash) {
+      clearRefreshCookie();
       return res.status(401).json({
         success: false,
         message: "User not found",
       });
     }
-
     const newRefreshTokenId = crypto.randomBytes(32).toString("hex");
     const accessToken = createAccessToken({ id: payload.id, role: user.role });
     const newRefreshToken = createRefreshToken({
       id: payload.id,
       tokenId: newRefreshTokenId,
     });
-
     user.refreshTokenHash = hashTokenId(newRefreshTokenId);
     await user.save();
-
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       secure: config.NODE_ENV === "production",
@@ -207,7 +214,6 @@ export const refreshToken = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
-
     return res.status(200).json({
       success: true,
       data: {
@@ -216,6 +222,7 @@ export const refreshToken = async (req, res) => {
     });
   } catch (error) {
     console.error("[refreshToken] Error:", error);
+    clearRefreshCookie();
     return res.status(401).json({
       success: false,
       message: "Invalid or expired refresh token",
