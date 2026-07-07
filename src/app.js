@@ -11,15 +11,15 @@ import authRouter from "./routes/auth.routes.js";
 import superAdminRouter from "./routes/superAdmin.routes.js";
 
 const app = express();
+app.use(cookieParser());
 app.use(
   cors({
-    origin: config.CLIENT_URL,
+    origin: true, //later add Client URL
     credentials: true,
   }),
 );
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(cookieParser());
 app.use("/api/auth", authRouter);
 app.use("/api/auth", superAdminRouter);
 app.use("/api/post", postRouter);
