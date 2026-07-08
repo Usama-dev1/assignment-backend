@@ -58,6 +58,7 @@ export const register = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
+    res.set("Cache-Control", "no-store");
 
     return res.status(201).json({
       success: true,
@@ -128,6 +129,7 @@ export const login = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
+    res.set("Cache-Control", "no-store");
 
     return res.status(200).json({
       success: true,
@@ -243,6 +245,8 @@ export const refreshToken = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
+    res.set("Cache-Control", "no-store");
+
     return res.status(200).json({
       success: true,
       data: {
@@ -278,6 +282,8 @@ export const getProfile = async (req, res) => {
         message: "user not found",
       });
     }
+    res.set("Cache-Control", "no-store");
+
     return res.status(200).json({
       success: true,
       data: {
