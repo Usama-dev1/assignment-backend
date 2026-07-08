@@ -11,6 +11,8 @@ import authRouter from "./routes/auth.routes.js";
 import superAdminRouter from "./routes/superAdmin.routes.js";
 
 const app = express();
+app.set("etag", false);
+
 app.use(cookieParser());
 app.use(
   cors({
