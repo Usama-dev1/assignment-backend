@@ -21,6 +21,7 @@ export const createPost = async (req, res) => {
       draft: isDraft,
     });
     await newPost.save();
+    await newPost.populate("categoryId", "title");
 
     return res.status(201).json({
       success: true,
@@ -45,7 +46,11 @@ export const getPosts = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const [allPosts, totalCount] = await Promise.all([
-      Post.find({ isDeleted: false, draft: false }).skip(skip).limit(limit),
+      Post.find({ isDeleted: false, draft: false })
+        .populate("categoryId", "title")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
       Post.countDocuments({ isDeleted: false, draft: false }),
     ]);
 
@@ -87,7 +92,7 @@ export const getPostById = async (req, res) => {
       _id: id,
       isDeleted: false,
       draft: false,
-    });
+    }).populate("categoryId", "title");
     if (!post) {
       return res.status(404).json({
         success: false,
@@ -125,12 +130,18 @@ export const getDraftPosts = async (req, res) => {
       req.user.role === "admin" || req.user.role === "super_admin";
     if (canSeeAllDraft) {
       [drafts, totalCount] = await Promise.all([
-        Post.find({ isDeleted: false, draft: true }).skip(skip).limit(limit),
+        Post.find({ isDeleted: false, draft: true })
+          .populate("categoryId", "title")
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit),
         Post.countDocuments({ isDeleted: false, draft: true }),
       ]);
     } else {
       [drafts, totalCount] = await Promise.all([
         Post.find({ userId, isDeleted: false, draft: true })
+          .populate("categoryId", "title")
+          .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
         Post.countDocuments({ userId, isDeleted: false, draft: true }),
@@ -173,8 +184,7 @@ export const getDraftPostById = async (req, res) => {
       _id: id,
       isDeleted: false,
       draft: true,
-    });
-
+    }).populate("categoryId", "title");
     if (!post) {
       return res.status(404).json({
         success: false,
@@ -233,7 +243,7 @@ export const updatePost = async (req, res) => {
       updates.draft = req.body.draft;
     }
 
-    const post = await Post.findById(id);
+    const post = await Post.findById(id).populate("categoryId", "title");
 
     if (!post) {
       return res.status(404).json({
@@ -257,7 +267,7 @@ export const updatePost = async (req, res) => {
       id,
       { $set: updates },
       { new: true, runValidators: true },
-    );
+    ).populate("categoryId", "title");
 
     if (!updatedPost) {
       return res.status(404).json({
@@ -292,7 +302,8 @@ export const deletePost = async (req, res) => {
       });
     }
 
-    const post = await Post.findById(id);
+    const post = await Post.findById(id).populate("categoryId", "title");
+
     if (!post) {
       return res.status(404).json({
         success: false,
@@ -314,7 +325,7 @@ export const deletePost = async (req, res) => {
       id,
       { $set: { isDeleted: true } },
       { new: true, runValidators: true },
-    );
+    ).populate("categoryId", "title");
 
     if (!softDeletedPost) {
       return res.status(404).json({
@@ -348,6 +359,7 @@ export const hardDeletePost = async (req, res) => {
     }
 
     const post = await Post.findById(id);
+
     if (!post) {
       return res.status(404).json({
         success: false,
