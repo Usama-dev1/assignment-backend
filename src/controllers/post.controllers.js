@@ -266,7 +266,7 @@ export const updatePost = async (req, res) => {
     const updatedPost = await Post.findByIdAndUpdate(
       id,
       { $set: updates },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     ).populate("categoryId", "title");
 
     if (!updatedPost) {
@@ -324,7 +324,7 @@ export const deletePost = async (req, res) => {
     const softDeletedPost = await Post.findByIdAndUpdate(
       id,
       { $set: { isDeleted: true } },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     ).populate("categoryId", "title");
 
     if (!softDeletedPost) {
