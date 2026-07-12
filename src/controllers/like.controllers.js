@@ -157,6 +157,7 @@ export const removeLike = async (req, res) => {
     return res.status(200).json({
       likeCount,
       success: true,
+      data: deletedLike,
       message: "Like removed successfully",
     });
   } catch (error) {
