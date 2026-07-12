@@ -34,6 +34,7 @@ export const getPostLikes = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: likes,
+      likeCount: likes.length,
     });
   } catch (error) {
     console.error("[getPostLikes] Error:", error);
@@ -84,10 +85,11 @@ export const createLike = async (req, res) => {
 
     const like = new Like({ postId, userId });
     await like.save();
-
+    const likeCount = await Like.countDocuments({ postId });
     return res.status(201).json({
       success: true,
       data: like,
+      likeCount,
       message: "Like added successfully",
     });
   } catch (error) {
@@ -150,8 +152,10 @@ export const removeLike = async (req, res) => {
         message: "Like not found",
       });
     }
+    const likeCount = await Like.countDocuments({ postId });
 
     return res.status(200).json({
+      likeCount,
       success: true,
       message: "Like removed successfully",
     });
