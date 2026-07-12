@@ -222,7 +222,7 @@ export const updateComment = async (req, res) => {
       });
     }
 
-    const isOwner = comment.userId.toString() === userId;
+    const isOwner = comment.userId._id.toString() === userId;
     const canManageComment =
       req.user.role === "admin" || req.user.role === "super_admin";
     if (!isOwner && !canManageComment) {
@@ -288,7 +288,7 @@ export const deleteComment = async (req, res) => {
       });
     }
 
-    const isOwner = comment.userId.toString() === userId;
+    const isOwner = comment.userId._id.toString() === userId;
     const canManageComment =
       req.user.role === "admin" || req.user.role === "super_admin";
     if (!isOwner && !canManageComment) {
