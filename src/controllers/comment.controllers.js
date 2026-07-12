@@ -39,7 +39,11 @@ export const getAllComments = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const [comments, totalCount] = await Promise.all([
-      Comment.find({ postId }).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Comment.find({ postId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("userId", "username email"),
       Comment.countDocuments({ postId }),
     ]);
 
@@ -103,7 +107,9 @@ export const createComment = async (req, res) => {
       userId,
       content: contentValue,
     });
+
     await comment.save();
+    await comment.populate("userId", "username email");
 
     return res.status(201).json({
       success: true,
@@ -144,7 +150,11 @@ export const getCommentById = async (req, res) => {
       });
     }
 
-    const comment = await Comment.findOne({ _id: commentId, postId });
+    const comment = await Comment.findOne({ _id: commentId, postId }).populate(
+      "userId",
+      "username email",
+    );
+
     if (!comment) {
       return res.status(404).json({
         success: false,
@@ -200,7 +210,11 @@ export const updateComment = async (req, res) => {
       });
     }
 
-    const comment = await Comment.findOne({ _id: commentId, postId });
+    const comment = await Comment.findOne({ _id: commentId, postId }).populate(
+      "userId",
+      "username email",
+    );
+
     if (!comment) {
       return res.status(404).json({
         success: false,
@@ -262,7 +276,11 @@ export const deleteComment = async (req, res) => {
       });
     }
 
-    const comment = await Comment.findOne({ _id: commentId, postId });
+    const comment = await Comment.findOne({ _id: commentId, postId }).populate(
+      "userId",
+      "username email",
+    );
+
     if (!comment) {
       return res.status(404).json({
         success: false,
