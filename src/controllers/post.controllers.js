@@ -44,14 +44,20 @@ export const getPosts = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const { myPosts } = req.query;
+
+    const filter =
+      myPosts === "true" && req.user?.id ? { userId: req.user.id } : {};
+    filter.isDeleted = false;
+    filter.draft = false;
 
     const [allPosts, totalCount] = await Promise.all([
-      Post.find({ isDeleted: false, draft: false })
+      Post.find(filter)
         .populate("categoryId", "title")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      Post.countDocuments({ isDeleted: false, draft: false }),
+      Post.countDocuments(filter),
     ]);
 
     const totalPages = Math.ceil(totalCount / limit);
@@ -124,27 +130,32 @@ export const getDraftPosts = async (req, res) => {
     if (!limit || limit < 1) limit = 10;
     limit = Math.min(limit, 50);
     const skip = (page - 1) * limit;
-    let drafts;
-    let totalCount;
+    const { allDrafts } = req.query;
+
+    let drafts, totalCount;
+
     const canSeeAllDraft =
       req.user.role === "admin" || req.user.role === "super_admin";
-    if (canSeeAllDraft) {
+
+    if (canSeeAllDraft && allDrafts === "true") {
+      const filter = { isDeleted: false, draft: true };
       [drafts, totalCount] = await Promise.all([
-        Post.find({ isDeleted: false, draft: true })
+        Post.find(filter)
           .populate("categoryId", "title")
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
-        Post.countDocuments({ isDeleted: false, draft: true }),
+        Post.countDocuments(filter),
       ]);
     } else {
+      const filter = { userId, isDeleted: false, draft: true };
       [drafts, totalCount] = await Promise.all([
-        Post.find({ userId, isDeleted: false, draft: true })
+        Post.find(filter)
           .populate("categoryId", "title")
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
-        Post.countDocuments({ userId, isDeleted: false, draft: true }),
+        Post.countDocuments(filter),
       ]);
     }
 
@@ -313,7 +324,8 @@ export const deletePost = async (req, res) => {
 
     //only post owner and admin/super admin can soft delete
     const isOwner = post.userId.toString() === userId;
-    const canDeleteThisPost = req.user.role === "super_admin";
+    const canDeleteThisPost =
+      req.user.role === "admin" || req.user.role === "super_admin";
     if (!isOwner && !canDeleteThisPost) {
       return res.status(403).json({
         success: false,

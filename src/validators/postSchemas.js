@@ -6,7 +6,7 @@ export const createPostSchema = z
     content: z
       .string()
       .trim()
-      .min(100, "Content must be at least 100 characters"),
+      .min(20, "Content must be at least 20 characters"),
     categoryId: z
       .string()
       .regex(/^[0-9a-fA-F]{24}$/, "Invalid category ID format"),
