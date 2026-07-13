@@ -51,3 +51,18 @@ export const authorize = (...allowedRoles) => {
     next();
   };
 };
+export const optionalAuthenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return next();
+
+  const token = authHeader.split(" ")[1];
+  if (!token) return next();
+
+  try {
+    const payload = jwt.verify(token, config.ACCESS_TOKEN_SECRET);
+    req.user = { id: payload.id, role: payload.role };
+  } catch (err) {
+    console.log(err);
+  }
+  next();
+};

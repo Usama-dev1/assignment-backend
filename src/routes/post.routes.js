@@ -5,7 +5,11 @@ import {
   createPostSchema,
   updatePostSchema,
 } from "../validators/postSchemas.js";
-import { authenticate, authorize } from "../middleware/auth.js";
+import {
+  authenticate,
+  authorize,
+  optionalAuthenticate,
+} from "../middleware/auth.js";
 
 const postRouter = Router();
 
@@ -18,7 +22,7 @@ postRouter.post(
 );
 
 // GET all posts (with pagination)
-postRouter.get("/", postController.getPosts);
+postRouter.get("/", optionalAuthenticate, postController.getPosts);
 
 // GET draft posts
 postRouter.get("/drafts", authenticate, postController.getDraftPosts);
