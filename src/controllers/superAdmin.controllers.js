@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import { sanitizeUser } from "../utils/sanitizeUser.js";
+import Comment from "../models/comment.model.js";
 export const getUsers = async (req, res) => {
   try {
     let page = parseInt(req.query.page);
@@ -362,6 +363,50 @@ export const restoreUser = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to restore user",
+    });
+  }
+};
+
+export const getAllComments = async (req, res) => {
+  try {
+    let page = parseInt(req.query.page);
+    if (!page || page < 1) page = 1;
+
+    let limit = parseInt(req.query.limit);
+    if (!limit || limit < 1) limit = 10;
+    limit = Math.min(limit, 50);
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+
+    const [allComments, totalCount] = await Promise.all([
+      Comment.find(filter)
+        .populate("userId", "username email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Comment.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        comments: allComments,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalPosts: totalCount,
+          limit,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("[getAllComments] Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch comments",
     });
   }
 };
