@@ -501,33 +501,49 @@ export const restorePost = async (req, res) => {
   }
 };
 
+import Post from "../models/post.model.js";
+import Comment from "../models/comment.model.js"; // add this import
+
 export const getUserStats = async (req, res) => {
   try {
     const userId = req.user.id;
     const isPrivileged =
       req.user.role === "admin" || req.user.role === "super_admin";
 
-    const [publishedPosts, draftPosts] = await Promise.all([
-      Post.countDocuments({ userId, isDeleted: false, draft: false }),
-      Post.countDocuments({ userId, isDeleted: false, draft: true }),
-    ]);
+    const [publishedPosts, draftPosts, totalComments, totalLikes] =
+      await Promise.all([
+        Post.countDocuments({ userId, isDeleted: false, draft: false }),
+        Post.countDocuments({ userId, isDeleted: false, draft: true }),
+        Comment.countDocuments({ userId }),
+        Like.countDocuments({ userId }),
+      ]);
 
-    const stats = { publishedPosts, draftPosts };
+    const stats = { publishedPosts, draftPosts, totalComments, totalLikes };
 
     if (isPrivileged) {
-      const [allPublishedPosts, allDraftPosts, allDeletedPosts, allPosts] =
-        await Promise.all([
-          Post.countDocuments({ isDeleted: false, draft: false }),
-          Post.countDocuments({ isDeleted: false, draft: true }),
-          Post.countDocuments({ isDeleted: true }),
-          Post.countDocuments({}),
-        ]);
+      const [
+        allPublishedPosts,
+        allDraftPosts,
+        allDeletedPosts,
+        allPosts,
+        allComments,
+        allLikes,
+      ] = await Promise.all([
+        Post.countDocuments({ isDeleted: false, draft: false }),
+        Post.countDocuments({ isDeleted: false, draft: true }),
+        Post.countDocuments({ isDeleted: true }),
+        Post.countDocuments({}),
+        Comment.countDocuments({}),
+        Like.countDocuments({}),
+      ]);
 
       stats.platform = {
         totalPublishedPosts: allPublishedPosts,
         totalDraftPosts: allDraftPosts,
         totalDeletedPosts: allDeletedPosts,
         totalPostsIncludingDeleted: allPosts,
+        totalComments: allComments,
+        totalLikes: allLikes,
       };
     }
 
