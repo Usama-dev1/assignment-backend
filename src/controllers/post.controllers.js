@@ -501,9 +501,6 @@ export const restorePost = async (req, res) => {
   }
 };
 
-import Post from "../models/post.model.js";
-import Comment from "../models/comment.model.js"; // add this import
-
 export const getUserStats = async (req, res) => {
   try {
     const userId = req.user.id;
