@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Post from "../models/post.model.js";
-
+import Comment from "../models/comment.model.js";
+import Like from "../models/like.model.js";
 //create post controller
 export const createPost = async (req, res) => {
   try {
@@ -359,7 +360,8 @@ export const deletePost = async (req, res) => {
   }
 };
 
-//hard delete post requires post id in params only admin and super admin
+//hard delete post requires post id in
+// params only admin and super admin
 export const hardDeletePost = async (req, res) => {
   try {
     const { id } = req.params;
@@ -495,6 +497,49 @@ export const restorePost = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to restore post",
+    });
+  }
+};
+
+export const getUserStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const isPrivileged =
+      req.user.role === "admin" || req.user.role === "super_admin";
+
+    const [publishedPosts, draftPosts] = await Promise.all([
+      Post.countDocuments({ userId, isDeleted: false, draft: false }),
+      Post.countDocuments({ userId, isDeleted: false, draft: true }),
+    ]);
+
+    const stats = { publishedPosts, draftPosts };
+
+    if (isPrivileged) {
+      const [allPublishedPosts, allDraftPosts, allDeletedPosts, allPosts] =
+        await Promise.all([
+          Post.countDocuments({ isDeleted: false, draft: false }),
+          Post.countDocuments({ isDeleted: false, draft: true }),
+          Post.countDocuments({ isDeleted: true }),
+          Post.countDocuments({}),
+        ]);
+
+      stats.platform = {
+        totalPublishedPosts: allPublishedPosts,
+        totalDraftPosts: allDraftPosts,
+        totalDeletedPosts: allDeletedPosts,
+        totalPostsIncludingDeleted: allPosts,
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    console.error("[getUserStats] Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch stats",
     });
   }
 };

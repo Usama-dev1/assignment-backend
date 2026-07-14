@@ -24,6 +24,9 @@ postRouter.post(
 // GET all posts (with pagination)
 postRouter.get("/", optionalAuthenticate, postController.getPosts);
 
+//get post stats for user
+postRouter.get("/stats", authenticate, postController.getUserStats);
+
 // GET draft posts
 postRouter.get("/drafts", authenticate, postController.getDraftPosts);
 //get single draft post by id
