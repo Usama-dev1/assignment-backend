@@ -50,4 +50,20 @@ postRouter.delete(
   postController.hardDeletePost,
 );
 
+// GET all posts including deleted  admin/super_admin only
+postRouter.get(
+  "/admin/all",
+  authenticate,
+  authorize("admin", "super_admin"),
+  postController.getAllPostsAdmin,
+);
+
+// restore a soft-deleted post  admin/super admin only
+postRouter.patch(
+  "/restore/:id",
+  authenticate,
+  authorize("admin", "super_admin"),
+  postController.restorePost,
+);
+
 export default postRouter;

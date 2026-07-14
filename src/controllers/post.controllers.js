@@ -409,3 +409,92 @@ export const hardDeletePost = async (req, res) => {
     });
   }
 };
+
+// admin/super admin see all posts even soft deleted
+export const getAllPostsAdmin = async (req, res) => {
+  try {
+    let page = parseInt(req.query.page);
+    if (!page || page < 1) page = 1;
+
+    let limit = parseInt(req.query.limit);
+    if (!limit || limit < 1) limit = 10;
+    limit = Math.min(limit, 50);
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+
+    const [allPosts, totalCount] = await Promise.all([
+      Post.find(filter)
+        .populate("categoryId", "title")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Post.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        posts: allPosts,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalPosts: totalCount,
+          limit,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("[getAllPostsAdmin] Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch posts",
+    });
+  }
+};
+export const restorePost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid post ID format",
+      });
+    }
+
+    const post = await Post.findOne({ _id: id, isDeleted: true });
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found or not deleted",
+      });
+    }
+
+    const restoredPost = await Post.findByIdAndUpdate(
+      id,
+      { $set: { isDeleted: false } },
+      { returnDocument: "after", runValidators: true },
+    ).populate("categoryId", "title");
+
+    if (!restoredPost) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: restoredPost,
+      message: "Post restored successfully",
+    });
+  } catch (error) {
+    console.error("[restorePost] Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to restore post",
+    });
+  }
+};
