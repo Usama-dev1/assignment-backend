@@ -410,3 +410,53 @@ export const getAllComments = async (req, res) => {
     });
   }
 };
+
+export const deleteUserComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const userId = req.user.id;
+
+    if (
+      !mongoose.Types.ObjectId.isValid(commentId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID format",
+      });
+    }
+
+
+    const comment = await Comment.findOne({ _id: commentId}).populate(
+      "userId",
+      "username email",
+    );
+
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Comment not found",
+      });
+    }
+
+    const canManageComment =
+      req.user.role === "admin" || req.user.role === "super_admin";
+    if (!canManageComment) {
+      return res.status(403).json({
+        success: false,
+        message: "You can not delete this comment",
+      });
+    }
+
+    await Comment.deleteOne({ _id: commentId});
+    return res.status(200).json({
+      success: true,
+      message: "Comment deleted successfully",
+    });
+  } catch (error) {
+    console.error("[deleteUserComment] Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete comment",
+    });
+  }
+};

@@ -71,6 +71,14 @@ superAdminRouter.delete(
   superAdminController.hardDeleteUser,
 );
 
+//allow admin and super admin to delete user comment
+superAdminRouter.delete(
+  "/users/comments/:commentId",
+  authenticate,
+  authorize("admin", "super_admin"),
+  superAdminController.deleteUserComment,
+);
+
 //route to restore the soft deleted user
 superAdminRouter.patch(
   "/users/:id/restore",
